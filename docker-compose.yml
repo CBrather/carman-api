@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  db:
+    image: mongo:6.0.10
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+    ports:
+      - 27017:27017
+    networks:
+      - carman
+
+  carman-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    environment:
+      - AUTH_DOMAIN=https://dev-cebear.eu.auth0.com/
+      - AUTH_AUDIENCE=http://localhost:8080
+      - DB_CONNECTION_STRING=mongodb://mongo:mongo@mongo:27017
+      - LOGLEVEL=debug
+    networks:
+      - carman
+
+networks:
+  carman:
+    driver: bridge

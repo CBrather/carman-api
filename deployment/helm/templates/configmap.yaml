@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: carman-api
+  namespace: 'iam'
+  annotations:
+    'helm.sh/hook': pre-install,pre-upgrade
+    'helm.sh/hook-weight': '005'
+    'helm.sh/hook-delete-policy': before-hook-creation
+data:
+  AUTH_DOMAIN: '{{ .Values.auth.domain }}'
+  AUTH_AUDIENCE: '{{ .Values.auth.audience }}'
+  LOGLEVEL: '{{ .Values.loglevel }}'
