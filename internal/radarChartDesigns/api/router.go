@@ -11,7 +11,7 @@ import (
 
 type RouterConfig struct {
 	DBClient *mongo.Client
-	Auth middleware.JWTValidatorConfig
+	Auth     middleware.JWTValidatorConfig
 }
 
 func Router(rootRouter *chi.Mux, config RouterConfig) {

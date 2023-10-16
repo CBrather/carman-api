@@ -16,7 +16,7 @@ import (
 
 type JWTValidatorConfig struct {
 	Audience string
-	Domain string
+	Domain   string
 }
 
 type CustomClaims struct {

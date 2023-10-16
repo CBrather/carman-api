@@ -25,11 +25,10 @@ func GetDBClient(connectionString string) (*mongo.Client, error) {
 	}
 
 	var pingResult bson.M
-	err = dbClient.Database("admin").RunCommand(context.TODO(), bson.D{{ Key: "ping", Value: 1}}).Decode(&pingResult)
+	err = dbClient.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Decode(&pingResult)
 	if err != nil {
 		return nil, err
 	}
 
 	return dbClient, nil
 }
-

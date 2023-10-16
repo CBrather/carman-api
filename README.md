@@ -1,3 +1,3 @@
-# analyzer
+# Carman API
 
-Analyzing documents through azure services
+Backend for the Carman WebApp

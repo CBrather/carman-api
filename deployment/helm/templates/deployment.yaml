@@ -58,6 +58,11 @@ spec:
                 configMapKeyRef:
                   name: {{ .Values.serviceName }}
                   key: AUTH_AUDIENCE
+            - name: DB_CONNECTION_STRING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.serviceName }}
+                  key: DB_CONNECTION_STRING
             - name: LOGLEVEL
               valueFrom:
                 configMapKeyRef:

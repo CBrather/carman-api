@@ -10,4 +10,5 @@ metadata:
 data:
   AUTH_DOMAIN: '{{ .Values.auth.domain }}'
   AUTH_AUDIENCE: '{{ .Values.auth.audience }}'
+  DB_CONNECTION_STRING: '{{ .Values.db.connectionString }}'
   LOGLEVEL: '{{ .Values.loglevel }}'
