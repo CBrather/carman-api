@@ -47,8 +47,6 @@ func GetByID(repo *repository.Design) http.HandlerFunc {
 
 func Create(repo *repository.Design) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var newDesign dtos.NewDesign
-
 		rawRequestBody, err := io.ReadAll(req.Body)
 		if err != nil {
 			zap.L().Warn("Unable to read bytes of the request body", zap.Error(err))
@@ -57,36 +55,51 @@ func Create(repo *repository.Design) http.HandlerFunc {
 			return
 		}
 
-		err = json.Unmarshal(rawRequestBody, &newDesign)
-		if err != nil {
-			zap.L().Info("Unable to deserialize request body to album", zap.Error(err))
+		var newDesign dtos.CreateRequest
+		if err = json.Unmarshal(rawRequestBody, &newDesign); err != nil {
+			zap.L().Info("Unable to deserialize request body to design", zap.Error(err))
 
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
-		newDesignModel := repository.DesignModel{Name: newDesign.Name}
+		newDesignModel := repository.DesignModel{
+			Name:          newDesign.Name,
+			CircularEdges: repository.EdgeDesign(newDesign.CircularEdges),
+			OuterEdge:     repository.EdgeDesign(newDesign.OuterEdge),
+			RadialEdges:   repository.EdgeDesign(newDesign.RadialEdges),
+			StartingAngle: newDesign.StartingAngle,
+		}
 
-		addedAlbum, err := repo.Create(req.Context(), newDesignModel)
+		createdDesign, err := repo.Create(req.Context(), newDesignModel)
 		if err != nil {
-			zap.L().Error("Failed to save new album", zap.Error(err))
-			zap.L().Debug("Failed to save new album", zap.Any("struct", newDesign))
+			zap.L().Error("Failed to save new design", zap.Error(err))
+			zap.L().Debug("Failed to save new design", zap.Any("struct", newDesign))
 
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		serializedAlbum, err := json.Marshal(addedAlbum)
-		if err != nil {
-			zap.L().Error("Failed serializing new album after successful save", zap.Error(err))
-			zap.L().Debug("Failed serializing new album after successful save", zap.Any("struct", addedAlbum))
+		responseDTO := dtos.ResponseSingle{
+			ID:            createdDesign.ID.String(),
+			Name:          createdDesign.Name,
+			CircularEdges: dtos.EdgeDesign(createdDesign.CircularEdges),
+			OuterEdge:     dtos.EdgeDesign(createdDesign.OuterEdge),
+			RadialEdges:   dtos.EdgeDesign(createdDesign.RadialEdges),
+			StartingAngle: createdDesign.StartingAngle,
+		}
 
-			http.Error(w, "Internal Server Error occurred after the album was successfully saved", http.StatusInternalServerError)
+		responseBody, err := json.Marshal(responseDTO)
+		if err != nil {
+			zap.L().Error("Failed serializing new design after successful save", zap.Error(err))
+			zap.L().Debug("Failed serializing new design after successful save", zap.Any("struct", createdDesign))
+
+			http.Error(w, "Internal Server Error occurred after the design was successfully saved", http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		_, _ = w.Write(serializedAlbum)
+		_, _ = w.Write(responseBody)
 	}
 }

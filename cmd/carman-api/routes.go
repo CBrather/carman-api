@@ -32,7 +32,7 @@ func SetupHttpRoutes(env EnvConfig) {
 		DBClient: dbClient,
 		Auth: middleware.JWTValidatorConfig{
 			Audience: env.Auth.Audience,
-			Domain: env.Auth.Domain,
+			Domain:   env.Auth.Domain,
 		},
 	}
 	radarChartDesigns.Router(router, radarChartDesignsConfig)
