@@ -50,8 +50,16 @@ func (r *Design) Create(ctx context.Context, newDesign DesignModel) (*DesignMode
 	return &findResult, nil
 }
 
-func (r *Design) GetByID(ctx context.Context, id int64) (DesignModel, error) {
-	return DesignModel{}, nil
+func (r *Design) GetByID(ctx context.Context, id string) (DesignModel, error) {
+	var design DesignModel
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return design, err
+	}
+
+	err = r.DBCollection.FindOne(ctx, bson.D{{Key: "_id", Value: objectID}}).Decode(&design)
+	return design, err
 }
 
 func (r *Design) List(ctx context.Context) ([]DesignModel, error) {
