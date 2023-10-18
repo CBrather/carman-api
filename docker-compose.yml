@@ -21,8 +21,8 @@ services:
       - db
     environment:
       - AUTH_DOMAIN=https://dev-cebear.eu.auth0.com/
-      - AUTH_AUDIENCE=http://localhost:8080
-      - DB_CONNECTION_STRING=mongodb://mongo:mongo@mongo:27017
+      - AUTH_AUDIENCE=https://dev.carman.cebear.cloud
+      - DB_CONNECTION_STRING=mongodb://mongo:mongo@db:27017
       - LOGLEVEL=debug
     networks:
       - carman

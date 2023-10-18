@@ -1,0 +1,120 @@
+openapi: '3.0.3'
+info:
+  version: '1.0.0'
+  title: 'carman public API'
+  description: Configure Radar Charts
+
+paths:
+  /charts/designs/radar/{designID}:
+    parameters:
+      - name: designID
+        description: The unique identifier of the chart design
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+    get:
+      summary: Read a Radar Chart Design
+      responses:
+        '200':
+          $ref: '#/responses/RadarChartDesign'
+
+  /charts/designs/radar:
+    get:
+      summary: List all radar chart designs
+      responses:
+        '200':
+          $ref: '#/responses/RadarChartDesigns'
+
+    post:
+      summary: Create a new radar chart design
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadarChartDesign'
+      responses:
+        '201':
+          $ref: '#/responses/RadarChartDesign'
+
+components:
+  schemas:
+    EdgeDesign:
+      description: Design parameters for edges of a chart
+      type: object
+      required:
+        - color
+        - style
+        - thickness
+      properties:
+        color:
+          type: string
+          pattern: "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
+        style:
+          type: string
+          enum:
+            - solid
+            - dashed
+        thickness:
+          type: number
+          format: int32
+          minimum: 1
+
+    ID:
+      description: A unique identifier
+      type: string
+      format: uuid
+
+    RadarChartDesign:
+      type: object
+      required:
+        - name
+        - circularEdges
+        - outerEdge
+        - radialEdges
+        - startingAngle
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        name:
+          type: string
+        circularEdges:
+          $ref: '#/components/EdgeDesign'
+        outerEdge:
+          $ref: '#/components/EdgeDesign'
+        radialEdges:
+          $ref: '#/components/EdgeDesign'
+        startingAngle:
+          type: number
+
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: A human readable error message
+          type: string
+
+  responses:
+    RadarChartDesigns:
+      description: A list of radar chart designs
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - items
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/components/RadarChartDesign'
+
+    RadarChartDesign:
+      description: A radar chart design
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/RadarChartDesign'
+            required: id

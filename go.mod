@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-logr/zapr v1.2.3
 	github.com/lib/pq v1.10.7
+	github.com/rs/cors v1.10.1
 	github.com/vrischmann/envconfig v1.3.0
 	go.mongodb.org/mongo-driver v1.12.1
 	go.opentelemetry.io/otel v1.11.2
