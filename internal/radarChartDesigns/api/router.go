@@ -23,8 +23,9 @@ func Router(rootRouter *chi.Mux, config RouterConfig) {
 		zap.L().Fatal("Failed creating RadarChartDesign Repository.", zap.Error(err))
 	}
 
-	router.With(middleware.RequireScope("chartdesign:read")).Get("/{id}", handlers.GetByID(repo))
 	router.With(middleware.RequireScope("chartdesign:create")).Post("/", handlers.Create(repo))
+	router.With(middleware.RequireScope("chartdesign:list")).Get("/", handlers.List(repo))
+	router.With(middleware.RequireScope("chartdesign:read")).Get("/{id}", handlers.GetByID(repo))
 
 	rootRouter.Mount("/charts/designs/radar", router)
 }

@@ -63,5 +63,13 @@ func (r *Design) GetByID(ctx context.Context, id string) (DesignModel, error) {
 }
 
 func (r *Design) List(ctx context.Context) ([]DesignModel, error) {
-	return []DesignModel{{}}, nil
+	cursor, err := r.DBCollection.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+
+	var designs []DesignModel
+	err = cursor.All(ctx, &designs)
+
+	return designs, err
 }

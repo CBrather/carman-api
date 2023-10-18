@@ -8,3 +8,7 @@ type ResponseSingle struct {
 	RadialEdges   EdgeDesign `json:"radialEdges"`
 	StartingAngle int        `json:"startingAngle"`
 }
+
+type ResponseList struct {
+	Items []ResponseSingle `json:"items"`
+}
