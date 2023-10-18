@@ -81,7 +81,7 @@ func Create(repo *repository.Design) http.HandlerFunc {
 		}
 
 		responseDTO := dtos.ResponseSingle{
-			ID:            createdDesign.ID.String(),
+			ID:            createdDesign.IDString(),
 			Name:          createdDesign.Name,
 			CircularEdges: dtos.EdgeDesign(createdDesign.CircularEdges),
 			OuterEdge:     dtos.EdgeDesign(createdDesign.OuterEdge),

@@ -9,12 +9,16 @@ import (
 )
 
 type DesignModel struct {
-	ID            primitive.ObjectID `bson:"_id, omitempty"`
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
 	Name          string             `bson:"name"`
 	CircularEdges EdgeDesign         `bson:"circularEdges"`
 	OuterEdge     EdgeDesign         `bson:"outerEdge"`
 	RadialEdges   EdgeDesign         `bson:"radialEdges"`
 	StartingAngle int                `bson:"int"`
+}
+
+func (m DesignModel) IDString() string {
+	return m.ID.Hex()
 }
 
 type EdgeDesign struct {
