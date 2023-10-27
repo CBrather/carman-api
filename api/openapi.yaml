@@ -17,14 +17,14 @@ paths:
       summary: Read a Radar Chart Design
       responses:
         '200':
-          $ref: '#/responses/RadarChartDesign'
+          $ref: '#/components/responses/RadarChartDesign'
 
   /charts/designs/radar:
     get:
       summary: List all radar chart designs
       responses:
         '200':
-          $ref: '#/responses/RadarChartDesigns'
+          $ref: '#/components/responses/RadarChartDesigns'
 
     post:
       summary: Create a new radar chart design
@@ -35,7 +35,7 @@ paths:
               $ref: '#/components/schemas/RadarChartDesign'
       responses:
         '201':
-          $ref: '#/responses/RadarChartDesign'
+          $ref: '#/components/responses/RadarChartDesign'
 
 components:
   schemas:
