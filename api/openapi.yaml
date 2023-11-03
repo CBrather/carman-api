@@ -79,11 +79,11 @@ components:
         name:
           type: string
         circularEdges:
-          $ref: '#/components/EdgeDesign'
+          $ref: '#/components/schemas/EdgeDesign'
         outerEdge:
-          $ref: '#/components/EdgeDesign'
+          $ref: '#/components/schemas/EdgeDesign'
         radialEdges:
-          $ref: '#/components/EdgeDesign'
+          $ref: '#/components/schemas/EdgeDesign'
         startingAngle:
           type: number
 
@@ -109,12 +109,12 @@ components:
               items:
                 type: array
                 items:
-                  $ref: '#/components/RadarChartDesign'
+                  $ref: '#/components/schemas/RadarChartDesign'
 
     RadarChartDesign:
       description: A radar chart design
       content:
         application/json:
           schema:
-            $ref: '#/components/RadarChartDesign'
+            $ref: '#/components/schemas/RadarChartDesign'
             required: id
