@@ -26,6 +26,7 @@ func Router(rootRouter *chi.Mux, config RouterConfig) {
 	router.With(middleware.RequirePermission("chartdesign:create")).Post("/", handlers.Create(repo))
 	router.With(middleware.RequirePermission("chartdesign:list")).Get("/", handlers.List(repo))
 	router.With(middleware.RequirePermission("chartdesign:read")).Get("/{id}", handlers.GetByID(repo))
+	router.With(middleware.RequirePermission("chartdesign:update")).Put("/{id}", handlers.UpdateByID(repo))
 
 	rootRouter.Mount("/charts/designs/radar", router)
 }

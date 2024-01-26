@@ -2,10 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/CBrather/carman-api/internal/app_errors"
 )
 
 type DesignModel struct {
@@ -50,16 +53,20 @@ func (r *Design) Create(ctx context.Context, newDesign DesignModel) (*DesignMode
 	return &findResult, nil
 }
 
-func (r *Design) GetByID(ctx context.Context, id string) (DesignModel, error) {
+func (r *Design) GetByID(ctx context.Context, id string) (*DesignModel, error) {
 	var design DesignModel
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return design, err
+		return nil, err
 	}
 
 	err = r.DBCollection.FindOne(ctx, bson.D{{Key: "_id", Value: objectID}}).Decode(&design)
-	return design, err
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, app_errors.NewErrNotFound(err)
+	}
+
+	return &design, err
 }
 
 func (r *Design) List(ctx context.Context) ([]DesignModel, error) {
@@ -72,4 +79,28 @@ func (r *Design) List(ctx context.Context) ([]DesignModel, error) {
 	err = cursor.All(ctx, &designs)
 
 	return designs, err
+}
+
+func (r *Design) UpdateByID(ctx context.Context, id string, newDesign DesignModel) (*DesignModel, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	updateResult, err := r.DBCollection.UpdateByID(context.TODO(), objectID, newDesign)
+	if err != nil {
+		return nil, err
+	}
+
+	if updateResult.MatchedCount == 0 {
+		return nil, app_errors.NewErrNotFound(nil)
+	}
+
+	var findResult DesignModel
+	err = r.DBCollection.FindOne(context.TODO(), bson.D{{Key: "_id", Value: objectID}}).Decode(&findResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return &findResult, nil
 }
