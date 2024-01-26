@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
@@ -20,18 +19,16 @@ type JWTValidatorConfig struct {
 }
 
 type CustomClaims struct {
-	Scope string `json:"scope"`
+	Permissions []string `json:"permissions"`
 }
 
 func (c CustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
-func (c CustomClaims) HasScope(expectedScope string) bool {
-	scopes := strings.Split(c.Scope, " ")
-
-	for _, scope := range scopes {
-		if scope == expectedScope {
+func (c CustomClaims) HasPermission(expectedPermission string) bool {
+	for _, permission := range c.Permissions {
+		if permission == expectedPermission {
 			return true
 		}
 	}
@@ -82,8 +79,8 @@ func EnsureValidToken(config JWTValidatorConfig) func(next http.Handler) http.Ha
 	}
 }
 
-func RequireScope(requiredScope string) func(next http.Handler) http.Handler {
-	// This returned func is the actual middleware created per route(r) by invoking RequireScope
+func RequirePermission(requiredPermission string) func(next http.Handler) http.Handler {
+	// This returned func is the actual middleware created per route by invoking RequirePermission
 	return func(next http.Handler) http.Handler {
 
 		// This returned func is the handler invoked per request by the middleware
@@ -91,8 +88,8 @@ func RequireScope(requiredScope string) func(next http.Handler) http.Handler {
 			token := req.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
 			claims := token.CustomClaims.(*CustomClaims)
 
-			if !claims.HasScope(requiredScope) {
-				zap.L().Info(fmt.Sprintf("Subject %s is missing a required scope: %s", token.RegisteredClaims.Subject, requiredScope))
+			if !claims.HasPermission(requiredPermission) {
+				zap.L().Info(fmt.Sprintf("Subject %s is missing a required permission: %s", token.RegisteredClaims.Subject, requiredPermission))
 
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"message":"Insufficient permissions."}`))
