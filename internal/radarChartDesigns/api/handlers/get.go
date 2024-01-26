@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
+	"github.com/CBrather/carman-api/internal/app_errors"
 	"github.com/CBrather/carman-api/internal/radarChartDesigns/api/dtos"
 	"github.com/CBrather/carman-api/internal/radarChartDesigns/repository"
 )
@@ -18,7 +20,14 @@ func GetByID(repo *repository.Design) http.HandlerFunc {
 
 		design, err := repo.GetByID(req.Context(), id)
 		if err != nil {
-			http.Error(w, "No design with that id was found", http.StatusNotFound)
+			if errors.Is(err, app_errors.ErrNotFound{}) {
+				zap.L().Warn(fmt.Sprintf("Failed getting design, as none with id %s was found", id))
+				http.Error(w, "No design with id was found", http.StatusNotFound)
+			} else {
+				zap.L().Error(fmt.Sprintf("Failed getting design with id %s", id), zap.Error(err))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+
 			return
 		}
 
