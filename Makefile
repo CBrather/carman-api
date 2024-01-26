@@ -48,7 +48,7 @@ $(LOCAL)/%: ; $(info $(M) downloading and installing $(URL))
 	$Q rm $(shell basename $(URL))
 
 GOLINT = $(GOBIN)/golangci-lint
-$(GOBIN)/golangci-lint: PACKAGE=github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
+$(GOBIN)/golangci-lint: PACKAGE=github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
 
 GOCOV = $(GOBIN)/gocov
 $(GOBIN)/gocov: PACKAGE=github.com/axw/gocov/gocov@v1.1.0
