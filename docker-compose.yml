@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   db:
     image: mongo:6.0.10
@@ -24,6 +24,16 @@ services:
       - AUTH_AUDIENCE=https://dev.carman.cebear.cloud
       - DB_CONNECTION_STRING=mongodb://mongo:mongo@db:27017
       - LOGLEVEL=debug
+    networks:
+      - carman
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    container_name: nginx
+    ports:
+      - "8181:80"
     networks:
       - carman
 
