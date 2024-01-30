@@ -17,7 +17,7 @@ type DesignModel struct {
 	CircularEdges EdgeDesign         `bson:"circularEdges"`
 	OuterEdge     EdgeDesign         `bson:"outerEdge"`
 	RadialEdges   EdgeDesign         `bson:"radialEdges"`
-	StartingAngle int                `bson:"int"`
+	StartingAngle int                `bson:"startingAngle"`
 }
 
 func (m DesignModel) IDString() string {
