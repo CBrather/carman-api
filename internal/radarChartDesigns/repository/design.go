@@ -87,7 +87,8 @@ func (r *Design) UpdateByID(ctx context.Context, id string, newDesign DesignMode
 		return nil, err
 	}
 
-	updateResult, err := r.DBCollection.UpdateByID(context.TODO(), objectID, newDesign)
+	update := bson.D{{Key: "$set", Value: newDesign}}
+	updateResult, err := r.DBCollection.UpdateByID(context.TODO(), objectID, update)
 	if err != nil {
 		return nil, err
 	}
