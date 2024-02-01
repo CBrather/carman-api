@@ -141,7 +141,7 @@ components:
     ID:
       description: A unique identifier
       type: string
-      format: uuid
+      pattern: /^[a-f\d]{24}$/
 
     RadarChartDesign:
       type: object

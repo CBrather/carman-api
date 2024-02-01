@@ -7,6 +7,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 
+	assessmentTemplates "github.com/CBrather/carman-api/internal/assessmentTemplates/api"
 	probes "github.com/CBrather/carman-api/internal/probes/api/handlers"
 	radarChartDesigns "github.com/CBrather/carman-api/internal/radarChartDesigns/api"
 	"github.com/CBrather/carman-api/pkg/database"
@@ -28,14 +29,13 @@ func SetupHttpRoutes(env EnvConfig) {
 	)
 
 	probes.SetupProbeRoutes(router)
-	radarChartDesignsConfig := radarChartDesigns.RouterConfig{
-		DBClient: dbClient,
-		Auth: middleware.JWTValidatorConfig{
-			Audience: env.Auth.Audience,
-			Domain:   env.Auth.Domain,
-		},
+
+	jwtValidatorConfig := middleware.JWTValidatorConfig{
+		Audience: env.Auth.Audience,
+		Domain:   env.Auth.Domain,
 	}
-	radarChartDesigns.Router(router, radarChartDesignsConfig)
+	assessmentTemplates.Router(router, dbClient, jwtValidatorConfig)
+	radarChartDesigns.Router(router, dbClient, jwtValidatorConfig)
 
 	zap.L().Info("Server listening on :8080")
 

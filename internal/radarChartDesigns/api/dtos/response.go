@@ -1,6 +1,6 @@
 package dtos
 
-type ResponseSingle struct {
+type Response struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
 	CircularEdges EdgeDesign `json:"circularEdges"`
@@ -10,5 +10,5 @@ type ResponseSingle struct {
 }
 
 type ResponseList struct {
-	Items []ResponseSingle `json:"items"`
+	Items []Response `json:"items"`
 }

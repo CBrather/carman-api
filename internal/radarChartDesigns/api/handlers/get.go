@@ -31,7 +31,7 @@ func GetByID(repo *repository.Design) http.HandlerFunc {
 			return
 		}
 
-		responseDTO := dtos.ResponseSingle{
+		responseDTO := dtos.Response{
 			ID:            design.IDString(),
 			Name:          design.Name,
 			CircularEdges: dtos.EdgeDesign(design.CircularEdges),
@@ -63,7 +63,7 @@ func List(repo *repository.Design) http.HandlerFunc {
 
 		var responseDTO dtos.ResponseList
 		for _, design := range designs {
-			designDTO := dtos.ResponseSingle{
+			designDTO := dtos.Response{
 				ID:            design.IDString(),
 				Name:          design.Name,
 				CircularEdges: dtos.EdgeDesign(design.CircularEdges),

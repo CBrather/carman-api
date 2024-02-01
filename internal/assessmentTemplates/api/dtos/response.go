@@ -1,14 +1,12 @@
 package dtos
 
-type ResponseSingle struct {
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	CircularEdges EdgeDesign `json:"circularEdges"`
-	OuterEdge     EdgeDesign `json:"outerEdge"`
-	RadialEdges   EdgeDesign `json:"radialEdges"`
-	StartingAngle int        `json:"startingAngle"`
+type Response struct {
+	ID     string  `json:"id"`
+	Label  string  `json:"label"`
+	Name   string  `json:"name"`
+	Scales []Scale `json:"scales"`
 }
 
 type ResponseList struct {
-	Items []ResponseSingle `json:"items"`
+	Items []Response `json:"items"`
 }
