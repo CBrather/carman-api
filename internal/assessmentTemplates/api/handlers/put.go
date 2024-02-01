@@ -10,12 +10,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/CBrather/carman-api/internal/app_errors"
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/api/dtos"
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/repository"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/api/dtos"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/repository"
 	"github.com/go-chi/chi/v5"
 )
 
-func UpdateByID(repo *repository.Design) http.HandlerFunc {
+func UpdateByID(repo *repository.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 		if id == "" {
@@ -33,49 +33,57 @@ func UpdateByID(repo *repository.Design) http.HandlerFunc {
 			return
 		}
 
-		var newDesign dtos.ChartDesignRequest
-		if err = json.Unmarshal(rawRequestBody, &newDesign); err != nil {
-			zap.L().Info("Unable to deserialize request body to design", zap.Error(err))
+		var newTemplate dtos.Request
+		if err = json.Unmarshal(rawRequestBody, &newTemplate); err != nil {
+			zap.L().Info("Unable to deserialize request body to template", zap.Error(err))
 
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
-		newDesignModel := repository.DesignModel{
-			Name:          newDesign.Name,
-			CircularEdges: repository.EdgeDesign(newDesign.CircularEdges),
-			OuterEdge:     repository.EdgeDesign(newDesign.OuterEdge),
-			RadialEdges:   repository.EdgeDesign(newDesign.RadialEdges),
-			StartingAngle: newDesign.StartingAngle,
+		newScaleModels := make([]repository.ScaleModel, 0, len(newTemplate.Scales))
+		for _, scale := range newTemplate.Scales {
+			newScaleModels = append(newScaleModels, scale.ToModel())
 		}
 
-		updatedDesign, err := repo.UpdateByID(req.Context(), id, newDesignModel)
+		newTemplateModel := repository.TemplateModel{
+			Label: newTemplate.Label,
+			Name:  newTemplate.Name,
+		}
+
+		updatedTemplate, err := repo.UpdateByID(req.Context(), id, newTemplateModel, newScaleModels)
 		if err != nil {
 			if errors.Is(err, app_errors.ErrNotFound{}) {
-				zap.L().Warn(fmt.Sprintf("Failed updating design, as none with id %s was found", id))
+				zap.L().Warn(fmt.Sprintf("Failed updating template, as none with id %s was found", id))
 				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			} else {
-				zap.L().Error(fmt.Sprintf("Failed to save updated design with id %s", id), zap.Error(err))
+				zap.L().Error(fmt.Sprintf("Failed to save updated template with id %s", id), zap.Error(err))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 
 			return
 		}
 
-		responseDTO := dtos.ResponseSingle{
-			ID:            updatedDesign.IDString(),
-			Name:          updatedDesign.Name,
-			CircularEdges: dtos.EdgeDesign(updatedDesign.CircularEdges),
-			OuterEdge:     dtos.EdgeDesign(updatedDesign.OuterEdge),
-			RadialEdges:   dtos.EdgeDesign(updatedDesign.RadialEdges),
-			StartingAngle: updatedDesign.StartingAngle,
+		updatedScales, err := repo.ScalesRepo.ListByID(req.Context(), updatedTemplate.Scales)
+		if err != nil {
+			zap.L().Error("Failed to get scales for updated template after successful save", zap.Error(err))
+			zap.L().Debug("Failed to get scales for updated template after successful save", zap.Any("struct", updatedTemplate))
+			http.Error(w, "Internal Server Error occurred after the template was successfully updated", http.StatusInternalServerError)
+			return
+		}
+
+		responseDTO := dtos.Response{
+			ID:     updatedTemplate.IDString(),
+			Label:  updatedTemplate.Label,
+			Name:   updatedTemplate.Name,
+			Scales: dtos.ScalesFromModel(updatedScales),
 		}
 
 		responseBody, err := json.Marshal(responseDTO)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("Failed serializing updated design with id %s after successful save", id), zap.Error(err))
+			zap.L().Error(fmt.Sprintf("Failed serializing updated template with id %s after successful save", id), zap.Error(err))
 
-			http.Error(w, "Internal Server Error occurred after the design was successfully saved", http.StatusInternalServerError)
+			http.Error(w, "Internal Server Error occurred after the template was successfully saved", http.StatusInternalServerError)
 			return
 		}
 

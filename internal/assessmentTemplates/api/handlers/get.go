@@ -10,39 +10,46 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/CBrather/carman-api/internal/app_errors"
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/api/dtos"
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/repository"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/api/dtos"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/repository"
 )
 
-func GetByID(repo *repository.Design) http.HandlerFunc {
+func GetByID(repo *repository.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 
-		design, err := repo.GetByID(req.Context(), id)
+		template, err := repo.GetByID(req.Context(), id)
 		if err != nil {
 			if errors.Is(err, app_errors.ErrNotFound{}) {
-				zap.L().Warn(fmt.Sprintf("Failed getting design, as none with id %s was found", id))
-				http.Error(w, "No design with id was found", http.StatusNotFound)
+				zap.L().Warn(fmt.Sprintf("Failed getting template, as none with id %s was found", id))
+				http.Error(w, "No template with id was found", http.StatusNotFound)
 			} else {
-				zap.L().Error(fmt.Sprintf("Failed getting design with id %s", id), zap.Error(err))
+				zap.L().Error(fmt.Sprintf("Failed getting template with id %s", id), zap.Error(err))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 
 			return
 		}
 
-		responseDTO := dtos.ResponseSingle{
-			ID:            design.IDString(),
-			Name:          design.Name,
-			CircularEdges: dtos.EdgeDesign(design.CircularEdges),
-			OuterEdge:     dtos.EdgeDesign(design.OuterEdge),
-			RadialEdges:   dtos.EdgeDesign(design.RadialEdges),
-			StartingAngle: design.StartingAngle,
+		scales, err := repo.ScalesRepo.ListByID(req.Context(), template.Scales)
+		if err != nil {
+			zap.L().Error(fmt.Sprintf("Failed getting scales for template with id %s", id), zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		scalesDTO := dtos.ScalesFromModel(scales)
+
+		responseDTO := dtos.Response{
+			ID:     template.IDString(),
+			Label:  template.Label,
+			Name:   template.Name,
+			Scales: scalesDTO,
 		}
 
 		body, err := json.Marshal(responseDTO)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("Failed to serialize the design with id %s", design.ID), zap.Error(err))
+			zap.L().Error(fmt.Sprintf("Failed to serialize the template with id %s", template.ID), zap.Error(err))
 
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -53,31 +60,37 @@ func GetByID(repo *repository.Design) http.HandlerFunc {
 	}
 }
 
-func List(repo *repository.Design) http.HandlerFunc {
+func List(repo *repository.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		designs, err := repo.List(req.Context())
+		templates, err := repo.List(req.Context())
 		if err != nil {
-			http.Error(w, "failed retrieving designs", http.StatusInternalServerError)
+			http.Error(w, "failed retrieving templates", http.StatusInternalServerError)
 			return
 		}
 
 		var responseDTO dtos.ResponseList
-		for _, design := range designs {
-			designDTO := dtos.ResponseSingle{
-				ID:            design.IDString(),
-				Name:          design.Name,
-				CircularEdges: dtos.EdgeDesign(design.CircularEdges),
-				OuterEdge:     dtos.EdgeDesign(design.OuterEdge),
-				RadialEdges:   dtos.EdgeDesign(design.RadialEdges),
-				StartingAngle: design.StartingAngle,
+		for _, template := range templates {
+			scales, err := repo.ScalesRepo.ListByID(req.Context(), template.Scales)
+			if err != nil {
+				zap.L().Error(fmt.Sprintf("Failed getting scales for template with id %s", template.ID.Hex()), zap.Error(err))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
 			}
 
-			responseDTO.Items = append(responseDTO.Items, designDTO)
+			scalesDTO := dtos.ScalesFromModel(scales)
+			templateDTO := dtos.Response{
+				ID:     template.IDString(),
+				Name:   template.Name,
+				Label:  template.Label,
+				Scales: scalesDTO,
+			}
+
+			responseDTO.Items = append(responseDTO.Items, templateDTO)
 		}
 
 		body, err := json.Marshal(responseDTO)
 		if err != nil {
-			zap.L().Error("Failed to serialize the designs", zap.Error(err))
+			zap.L().Error("Failed to serialize the templates", zap.Error(err))
 
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return

@@ -62,7 +62,7 @@ func UpdateByID(repo *repository.Design) http.HandlerFunc {
 			return
 		}
 
-		responseDTO := dtos.ResponseSingle{
+		responseDTO := dtos.Response{
 			ID:            updatedDesign.IDString(),
 			Name:          updatedDesign.Name,
 			CircularEdges: dtos.EdgeDesign(updatedDesign.CircularEdges),

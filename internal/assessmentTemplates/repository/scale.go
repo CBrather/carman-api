@@ -20,7 +20,7 @@ type ScaleModel struct {
 	ID    primitive.ObjectID `bson:"_id,omitempty"`
 	Label string             `bson:"label"`
 	Name  string             `bson:"name"`
-	Steps ScaleStep          `bson:"steps"`
+	Steps []ScaleStep        `bson:"steps"`
 }
 
 func (m ScaleModel) IDString() string {
@@ -68,6 +68,24 @@ func (r *Scale) GetByID(ctx context.Context, id string) (*ScaleModel, error) {
 
 func (r *Scale) List(ctx context.Context) ([]ScaleModel, error) {
 	cursor, err := r.DBCollection.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+
+	var scales []ScaleModel
+	err = cursor.All(ctx, &scales)
+
+	return scales, err
+}
+
+func (r *Scale) ListByID(ctx context.Context, ids []primitive.ObjectID) ([]ScaleModel, error) {
+	query := bson.D{{
+		Key: "_id", Value: bson.D{{
+			Key: "$in", Value: ids},
+		}},
+	}
+
+	cursor, err := r.DBCollection.Find(ctx, query)
 	if err != nil {
 		return nil, err
 	}

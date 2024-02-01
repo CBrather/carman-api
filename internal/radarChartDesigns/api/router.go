@@ -9,16 +9,11 @@ import (
 	"go.uber.org/zap"
 )
 
-type RouterConfig struct {
-	DBClient *mongo.Client
-	Auth     middleware.JWTValidatorConfig
-}
-
-func Router(rootRouter *chi.Mux, config RouterConfig) {
+func Router(rootRouter *chi.Mux, dbClient *mongo.Client, jwtValidatorConfig middleware.JWTValidatorConfig) {
 	router := chi.NewRouter()
-	router.Use(middleware.EnsureValidToken(config.Auth))
+	router.Use(middleware.EnsureValidToken(jwtValidatorConfig))
 
-	repo, err := repository.New(config.DBClient)
+	repo, err := repository.New(dbClient)
 	if err != nil {
 		zap.L().Fatal("Failed creating RadarChartDesign Repository.", zap.Error(err))
 	}

@@ -1,7 +1,7 @@
 package dtos
 
 type EdgeDesign struct {
-	Color     string
-	Style     string
-	Thickness int
+	Color     string `json:"color"`
+	Style     string `json:"style"`
+	Thickness int    `json:"thickness"`
 }

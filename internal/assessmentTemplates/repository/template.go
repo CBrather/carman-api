@@ -24,7 +24,7 @@ func (m TemplateModel) IDString() string {
 
 type Template struct {
 	dbCollection *mongo.Collection
-	scalesRepo   *Scale
+	ScalesRepo   *Scale
 }
 
 func New(dbClient *mongo.Client) (*Template, error) {
@@ -35,12 +35,12 @@ func New(dbClient *mongo.Client) (*Template, error) {
 
 	return &Template{
 		dbCollection: dbClient.Database("carman").Collection("assessment_templates"),
-		scalesRepo:   scalesRepo}, nil
+		ScalesRepo:   scalesRepo}, nil
 }
 
 func (r *Template) Create(ctx context.Context, newTemplate TemplateModel, scales []ScaleModel) (*TemplateModel, error) {
 	for _, scale := range scales {
-		scaleResult, err := r.scalesRepo.Create(ctx, scale)
+		scaleResult, err := r.ScalesRepo.Create(ctx, scale)
 		if err != nil {
 			return nil, err
 		}
@@ -91,25 +91,32 @@ func (r *Template) List(ctx context.Context) ([]TemplateModel, error) {
 }
 
 func (r *Template) UpdateByID(ctx context.Context, id string, newTemplate TemplateModel, scales []ScaleModel) (*TemplateModel, error) {
-	newTemplate.Scales = []primitive.ObjectID{}
+	_, err := r.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	newScales := make([]primitive.ObjectID, 0, len(scales))
 
 	for _, scale := range scales {
 		if scale.ID.IsZero() {
-			scaleResult, err := r.scalesRepo.Create(ctx, scale)
+			scaleResult, err := r.ScalesRepo.Create(ctx, scale)
 			if err != nil {
 				return nil, err
 			}
 
-			newTemplate.Scales = append(newTemplate.Scales, scaleResult.ID)
+			newScales = append(newScales, scaleResult.ID)
 		} else {
-			scaleResult, err := r.scalesRepo.UpdateByID(ctx, scale.IDString(), scale)
+			scaleResult, err := r.ScalesRepo.UpdateByID(ctx, scale.IDString(), scale)
 			if err != nil {
 				return nil, err
 			}
 
-			newTemplate.Scales = append(newTemplate.Scales, scaleResult.ID)
+			newScales = append(newScales, scaleResult.ID)
 		}
 	}
+
+	newTemplate.Scales = newScales
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -117,13 +124,9 @@ func (r *Template) UpdateByID(ctx context.Context, id string, newTemplate Templa
 	}
 
 	update := bson.D{{Key: "$set", Value: newTemplate}}
-	updateResult, err := r.dbCollection.UpdateByID(context.TODO(), objectID, update)
+	_, err = r.dbCollection.UpdateByID(context.TODO(), objectID, update)
 	if err != nil {
 		return nil, err
-	}
-
-	if updateResult.MatchedCount == 0 {
-		return nil, app_errors.NewErrNotFound(nil)
 	}
 
 	var findResult TemplateModel

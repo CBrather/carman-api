@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/api/dtos"
-	"github.com/CBrather/carman-api/internal/radarChartDesigns/repository"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/api/dtos"
+	"github.com/CBrather/carman-api/internal/assessmentTemplates/repository"
 )
 
-func Create(repo *repository.Design) http.HandlerFunc {
+func Create(repo *repository.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		rawRequestBody, err := io.ReadAll(req.Body)
 		if err != nil {
@@ -21,46 +21,55 @@ func Create(repo *repository.Design) http.HandlerFunc {
 			return
 		}
 
-		var newDesign dtos.ChartDesignRequest
-		if err = json.Unmarshal(rawRequestBody, &newDesign); err != nil {
-			zap.L().Info("Unable to deserialize request body to design", zap.Error(err))
+		var newTemplate dtos.Request
+		if err = json.Unmarshal(rawRequestBody, &newTemplate); err != nil {
+			zap.L().Info("Unable to deserialize request body to template", zap.Error(err))
 
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
-		newDesignModel := repository.DesignModel{
-			Name:          newDesign.Name,
-			CircularEdges: repository.EdgeDesign(newDesign.CircularEdges),
-			OuterEdge:     repository.EdgeDesign(newDesign.OuterEdge),
-			RadialEdges:   repository.EdgeDesign(newDesign.RadialEdges),
-			StartingAngle: newDesign.StartingAngle,
+		newScaleModels := make([]repository.ScaleModel, 0, len(newTemplate.Scales))
+		for _, scale := range newTemplate.Scales {
+			newScaleModels = append(newScaleModels, scale.ToModel())
 		}
 
-		createdDesign, err := repo.Create(req.Context(), newDesignModel)
+		newTemplateModel := repository.TemplateModel{
+			Label: newTemplate.Label,
+			Name:  newTemplate.Name,
+		}
+
+		createdTemplate, err := repo.Create(req.Context(), newTemplateModel, newScaleModels)
 		if err != nil {
-			zap.L().Error("Failed to save new design", zap.Error(err))
-			zap.L().Debug("Failed to save new design", zap.Any("struct", newDesign))
+			zap.L().Error("Failed to save new template", zap.Error(err))
+			zap.L().Debug("Failed to save new template", zap.Any("struct", newTemplate))
 
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		responseDTO := dtos.ResponseSingle{
-			ID:            createdDesign.IDString(),
-			Name:          createdDesign.Name,
-			CircularEdges: dtos.EdgeDesign(createdDesign.CircularEdges),
-			OuterEdge:     dtos.EdgeDesign(createdDesign.OuterEdge),
-			RadialEdges:   dtos.EdgeDesign(createdDesign.RadialEdges),
-			StartingAngle: createdDesign.StartingAngle,
+		createdScales, err := repo.ScalesRepo.ListByID(req.Context(), createdTemplate.Scales)
+		if err != nil {
+			zap.L().Error("Failed to get scales for new template after successful save", zap.Error(err))
+			zap.L().Debug("Failed to get scales for new template after successful save", zap.Any("struct", createdTemplate))
+
+			http.Error(w, "Internal Server Error occurred after the template was successfully saved", http.StatusInternalServerError)
+			return
+		}
+
+		responseDTO := dtos.Response{
+			ID:     createdTemplate.IDString(),
+			Label:  createdTemplate.Label,
+			Name:   createdTemplate.Name,
+			Scales: dtos.ScalesFromModel(createdScales),
 		}
 
 		responseBody, err := json.Marshal(responseDTO)
 		if err != nil {
-			zap.L().Error("Failed serializing new design after successful save", zap.Error(err))
-			zap.L().Debug("Failed serializing new design after successful save", zap.Any("struct", createdDesign))
+			zap.L().Error("Failed serializing new template after successful save", zap.Error(err))
+			zap.L().Debug("Failed serializing new template after successful save", zap.Any("struct", createdTemplate))
 
-			http.Error(w, "Internal Server Error occurred after the design was successfully saved", http.StatusInternalServerError)
+			http.Error(w, "Internal Server Error occurred after the template was successfully saved", http.StatusInternalServerError)
 			return
 		}
 
