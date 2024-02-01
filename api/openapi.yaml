@@ -5,6 +5,49 @@ info:
   description: Configure Radar Charts
 
 paths:
+  /assessmentTemplates:
+    get:
+      summary: List all assessment templates
+      responses:
+        "200":
+          $ref: "#/components/responses/AssessmentTemplates"
+
+    post:
+      summary: Create a new assessment template
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentTemplate"
+      responses:
+        "201":
+          $ref: "#/components/responses/AssessmentTemplate"
+  
+  /assessmentTemplates/{templateID}:
+    parameters:
+      - name: templateID
+        description: The unique identifier of the assessment template
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/ID"
+    get:
+      summary: Read an assessment template
+      responses:
+        "200":
+          $ref: "#/components/responses/AssessmentTemplate"
+
+    put:
+      summary: Update an existing assessment template
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentTemplate"
+      responses:
+        "200":
+          $ref: "#/components/responses/AssessmentTemplate"
+
   /charts/designs/radar/{designID}:
     parameters:
       - name: designID
@@ -50,6 +93,30 @@ paths:
 
 components:
   schemas:
+    AssessmentTemplate:
+      description: A template for an assessment
+      type: object
+      required:
+        - label
+        - name
+        - scales
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        label:
+          type: string
+          minLength: 5
+          maxLength: 50
+        name:
+          type: string
+          minLength: 5
+          maxLength: 50
+        scales:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Scale"
+
     EdgeDesign:
       description: Design parameters for edges of a chart
       type: object
@@ -98,6 +165,42 @@ components:
         startingAngle:
           type: number
 
+    Scale:
+      description: A scale for a chart axis
+      type: object
+      required:
+        - label
+        - name
+        - steps
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        label:
+          type: string
+          minLength: 5
+          maxLength: 50
+        name:
+          type: string
+          minLength: 5
+          maxLength: 50
+        steps:
+          type: array
+          uniqueItems: true
+          items:
+            type: object
+            required:
+              - label
+              - value
+            properties:
+              label:
+                type: string
+                minLength: 1
+                maxLength: 20
+              value:
+                type: number
+                format: int32
+                minimum: 0
+
     Error:
       type: object
       required:
@@ -108,6 +211,37 @@ components:
           type: string
 
   responses:
+    AssessmentTemplate:
+      description: An assessment template
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AssessmentTemplate"
+            required: id
+
+    AssessmentTemplates:
+      description: A list of assessment templates
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - items
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssessmentTemplate"
+                  required: id
+
+    RadarChartDesign:
+      description: A radar chart design
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RadarChartDesign"
+            required: id
+
     RadarChartDesigns:
       description: A list of radar chart designs
       content:
@@ -121,11 +255,4 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/RadarChartDesign"
-
-    RadarChartDesign:
-      description: A radar chart design
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/RadarChartDesign"
-            required: id
+                  required: id
